@@ -200,7 +200,7 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         }
 
         // 增加进服次数
-        this.onJoinAddCount(player, cur);
+        this.onJoinAddCount(player);
     }
 
     private @NotNull TextComponent buildTip(@NotNull PaperCardTipApi.Tip tip) {
@@ -240,43 +240,21 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
 
         // 非小号、且未绑定
 
-        // 绑定验证码
-        final int code = qqBindApi1.getBindCodeService().createCode(player.getUniqueId(), player.getName());
-
         final TextComponent.Builder text = Component.text();
         text.append(this.prefix);
         text.appendSpace();
         text.append(Component.text("你还没有绑定QQ，请先绑定一下QQ哦").color(NamedTextColor.GREEN));
-
-        final String codeStr = "%d".formatted(code);
-
-        text.appendNewline();
-        text.append(Component.text("绑定验证码：").color(NamedTextColor.GREEN));
-        text.append(Component.text(codeStr)
-                .color(NamedTextColor.YELLOW).decorate(TextDecoration.UNDERLINED)
-                .clickEvent(ClickEvent.copyToClipboard(codeStr))
-                .hoverEvent(HoverEvent.showText(Component.text("点击复制")))
-        );
-
-        text.appendNewline();
-        text.append(Component.text("使用方法：直接将这个数字验证码发送到QQ群里就行").color(NamedTextColor.GREEN));
-
-        final String groupId = "%d".formatted(qqGroupAccessApi1.getMainGroupId());
-
-        text.appendNewline();
-        text.append(Component.text("QQ群：").color(NamedTextColor.GRAY));
-        text.append(Component.text(groupId)
-                .color(NamedTextColor.AQUA).decorate(TextDecoration.UNDERLINED)
-                .clickEvent(ClickEvent.copyToClipboard(groupId))
-                .hoverEvent(HoverEvent.showText(Component.text("点击复制")))
-        );
+        text.appendSpace();
+        text.append(Component.text("[点击绑定QQ]").color(NamedTextColor.GRAY).decorate(TextDecoration.UNDERLINED)
+                .clickEvent(ClickEvent.runCommand("/qq-bind code"))
+                .hoverEvent(HoverEvent.showText(Component.text("点击生成绑定验证码"))));
 
         player.sendMessage(text.build());
 
         return true;
     }
 
-    private void onJoinAddCount(@NotNull Player player, long cur) {
+    private void onJoinAddCount(@NotNull Player player) {
         if (this.playerOnlineTimeApi == null) return;
 
         this.taskScheduler.runTaskAsynchronously(() -> {
@@ -294,48 +272,55 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
 
             try {
                 onlineTimeAndJoinCount = this.playerOnlineTimeApi.queryTotalOnlineAndJoinCount(player.getUniqueId());
-
-                this.getLogger().info("玩家%s的总进入次数：%d，在线时长：%d".formatted(player.getName(),
-                        onlineTimeAndJoinCount.jointCount(), onlineTimeAndJoinCount.onlineTime()));
-
-                final long joinNo = onlineTimeAndJoinCount.jointCount() + 1;
-
-                if (joinNo % 20 == 0) {
-                    // 提示赞助
-                    if (this.sponsorshipApi != null) {
-                        final TextComponent message = this.sponsorshipApi.buildPromptMessage(player, joinNo, onlineTimeAndJoinCount.onlineTime());
-                        player.sendMessage(message);
-                    }
-                } else {
-                    // 提示TIP
-                    if (this.paperCardTipApi != null) {
-                        final int count = this.paperCardTipApi.queryCount();
-
-                        if (count <= 0) {
-                            player.sendMessage(this.buildTip(new PaperCardTipApi.Tip(0, "管理员还没有添加一条Tip", "警告")));
-                        } else {
-                            int index = this.paperCardTipApi.queryPlayerIndex(player.getUniqueId());
-                            index %= count;
-                            final List<PaperCardTipApi.Tip> tips = this.paperCardTipApi.queryByPage(1, index);
-                            final int size = tips.size();
-                            if (size == 1) {
-                                final PaperCardTipApi.Tip tip = tips.get(0);
-                                player.sendMessage(this.buildTip(tip));
-                            }
-                            index += 1;
-                            index %= count;
-                            this.paperCardTipApi.setPlayerIndex(player.getUniqueId(), index);
-                        }
-                    }
-                }
             } catch (Exception e) {
-                this.getLogger().warning(e.toString());
-                e.printStackTrace();
-                player.sendMessage(Component.text(e.toString()).color(NamedTextColor.RED));
+                getSLF4JLogger().error("", e);
+                sendException(player, e);
+                return;
             }
 
+            getSLF4JLogger().info("玩家%s的总进入次数：%d，在线时长：%d".formatted(player.getName(),
+                    onlineTimeAndJoinCount.jointCount(), onlineTimeAndJoinCount.onlineTime()));
 
+            final long joinNo = onlineTimeAndJoinCount.jointCount() + 1;
+
+            if (joinNo % 20 == 0) {
+                // 提示赞助
+                if (this.sponsorshipApi != null) {
+                    final TextComponent message = this.sponsorshipApi.buildPromptMessage(player, joinNo, onlineTimeAndJoinCount.onlineTime());
+                    player.sendMessage(message);
+                }
+            } else {
+                // 提示TIP
+                if (this.paperCardTipApi != null) {
+                    try {
+                        this.showTipForPlayer(player, this.paperCardTipApi);
+                    } catch (Exception e) {
+                        getSLF4JLogger().error("", e);
+                        sendException(player, e);
+                    }
+                }
+            }
         });
+    }
+
+    private void showTipForPlayer(@NotNull Player player, @NotNull PaperCardTipApi api) throws Exception {
+        final int count = api.queryCount();
+
+        if (count <= 0) {
+            player.sendMessage(this.buildTip(new PaperCardTipApi.Tip(0, "管理员还没有添加一条Tip", "警告")));
+        } else {
+            int index = api.queryPlayerIndex(player.getUniqueId());
+            index %= count;
+            final List<PaperCardTipApi.Tip> tips = api.queryByPage(1, index);
+            final int size = tips.size();
+            if (size == 1) {
+                final PaperCardTipApi.Tip tip = tips.get(0);
+                player.sendMessage(this.buildTip(tip));
+            }
+            index += 1;
+            index %= count;
+            api.setPlayerIndex(player.getUniqueId(), index);
+        }
     }
 
     @EventHandler
@@ -424,7 +409,7 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
                 try {
                     info = this.playerOnlineTimeApi.queryTotalOnlineAndJoinCount(player.getUniqueId());
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    getSLF4JLogger().error("", e);
                     this.sendError(commandSender, e.toString());
                     return;
                 }
@@ -485,7 +470,7 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
                 }
 
             } catch (Exception e) {
-                e.printStackTrace();
+                getSLF4JLogger().error("", e);
             }
         }
 
@@ -543,7 +528,7 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                getSLF4JLogger().error("", e);
             }
         }
 
@@ -558,6 +543,5 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         player.displayName(text.build());
         player.customName(player.displayName());
         player.setCustomNameVisible(true);
-
     }
 }
