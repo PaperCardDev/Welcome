@@ -138,7 +138,7 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         try {
             return api.createMainGroupAccess();
         } catch (Exception e) {
-            getSLF4JLogger().warn("createMainGroupAccess", e);
+            getSLF4JLogger().warn(e.toString());
         }
         return null;
     }
@@ -233,7 +233,10 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         if (!qqInfo.inGroup()) return;
 
         // 符合规范
-        if (qqInfo.nameCard().startsWith(player.getName())) return;
+        if (qqInfo.nameCard().startsWith(player.getName())) {
+            getSLF4JLogger().info("玩家 %s 的群昵称 %s 检查通过".formatted(player.getName(), qqInfo.nameCard()));
+            return;
+        }
 
         // 修改群昵称
         access.setGroupMemberRemark(qqInfo.qq(), player.getName());
