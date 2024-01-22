@@ -10,6 +10,9 @@ import cn.paper_card.qq_bind.api.BindInfo;
 import cn.paper_card.qq_bind.api.QqBindApi;
 import cn.paper_card.qq_group_access.api.GroupAccess;
 import cn.paper_card.qq_group_access.api.QqGroupAccessApi;
+import cn.paper_card.qq_group_member_info.api.QqGroupMemberInfo;
+import cn.paper_card.qq_group_member_info.api.QqGroupMemberInfoApi;
+import cn.paper_card.qq_group_member_info.api.QqGroupMemberInfoService;
 import cn.paper_card.smurf.api.SmurfApi;
 import cn.paper_card.smurf.api.SmurfInfo;
 import cn.paper_card.sponsorship.SponsorshipApi;
@@ -55,6 +58,8 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
     private PlayerTitleApi playerTitleApi = null;
 
     private QqGroupAccessApi qqGroupAccessApi = null;
+
+    private QqGroupMemberInfoApi qqGroupMemberInfoApi = null;
 
     private QqBindApi qqBindApi = null;
 
@@ -133,7 +138,7 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         try {
             return api.createMainGroupAccess();
         } catch (Exception e) {
-            getSLF4JLogger().error("createMainGroupAccess", e);
+            getSLF4JLogger().warn("createMainGroupAccess", e);
         }
         return null;
     }
@@ -213,6 +218,33 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
                 .build();
     }
 
+    void checkGroupNameCard(@NotNull BindInfo bindInfo, @NotNull Player player, @NotNull GroupAccess access) throws Exception {
+        final QqGroupMemberInfoApi api = this.qqGroupMemberInfoApi;
+        if (api == null) return;
+
+        final QqGroupMemberInfoService service = api.getQqGroupMemberInfoService();
+
+        final QqGroupMemberInfo qqInfo = service.queryByQq(bindInfo.qq());
+
+        // 未记录
+        if (qqInfo == null) return;
+
+        // 不在群
+        if (!qqInfo.inGroup()) return;
+
+        // 符合规范
+        if (qqInfo.nameCard().startsWith(player.getName())) return;
+
+        // 修改群昵称
+        access.setGroupMemberRemark(qqInfo.qq(), player.getName());
+
+        // 记录
+        service.updateNameCard(qqInfo.qq(), player.getName());
+
+        // 发送消息
+        access.sendAtMessage(qqInfo.qq(), "\n已自动修改你的群昵称为游戏名：" + player.getName());
+    }
+
     private boolean showQqBindTip(@NotNull Player player) throws Exception {
         final QqBindApi qqBindApi1 = this.qqBindApi;
         final SmurfApi smurfApi1 = this.smurfApi;
@@ -227,7 +259,11 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         final BindInfo bindInfo = qqBindApi1.getBindService().queryByUuid(player.getUniqueId());
 
         // 已经绑定了
-        if (bindInfo != null) return false;
+        if (bindInfo != null) {
+            // 检查群昵称
+            this.checkGroupNameCard(bindInfo, player, access);
+            return false;
+        }
 
         // 未绑定
 
@@ -255,9 +291,9 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
     }
 
     private void onJoinAddCount(@NotNull Player player) {
-        if (this.playerOnlineTimeApi == null) return;
 
         this.taskScheduler.runTaskAsynchronously(() -> {
+
             // 没有QQ绑定的话，提示一下绑定QQ
             try {
                 if (showQqBindTip(player)) return;
@@ -266,6 +302,8 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
                 sendException(player, e);
                 return;
             }
+
+            if (this.playerOnlineTimeApi == null) return;
 
             // 查询进入次数和总计在线时长
             final PlayerOnlineTimeApi.OnlineTimeAndJoinCount onlineTimeAndJoinCount;
@@ -384,6 +422,8 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         this.smurfApi = this.getServer().getServicesManager().load(SmurfApi.class);
 
         this.playerTitleApi = this.getServer().getServicesManager().load(PlayerTitleApi.class);
+
+        this.qqGroupMemberInfoApi = this.getServer().getServicesManager().load(QqGroupMemberInfoApi.class);
 
         this.qqGroupAccessApi = this.getServer().getServicesManager().load(QqGroupAccessApi.class);
         if (this.qqGroupAccessApi == null) {
