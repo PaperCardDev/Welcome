@@ -97,11 +97,11 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         return null;
     }
 
-    void sendError(@NotNull CommandSender sender) {
+    void sendError(@NotNull CommandSender sender, @NotNull String error) {
         sender.sendMessage(Component.text()
                 .append(this.prefix)
                 .appendSpace()
-                .append(Component.text("该命令只能由玩家来执行").color(NamedTextColor.RED))
+                .append(Component.text(error).color(NamedTextColor.RED))
         );
     }
 
@@ -317,7 +317,7 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
                 // 提示赞助
                 if (sponsorshipApi1 != null) {
                     final TextComponent.Builder text = Component.text();
-                    sponsorshipApi1.appendPromptMessage(text, player.getUniqueId());
+                    sponsorshipApi1.appendPromptMessage(text, player.getUniqueId(), joinNo, onlineTimeAndJoinCount.onlineTime());
                     player.sendMessage(text.build());
                 }
             } else {
@@ -334,11 +334,14 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
             }
 
             // 添加进服次数
+            final boolean added;
             try {
-                playerOnlineTimeApi1.addJoinCountToday(player.getUniqueId(), System.currentTimeMillis());
+                added = playerOnlineTimeApi1.addJoinCountToday(player.getUniqueId(), System.currentTimeMillis());
             } catch (Exception e) {
                 getSLF4JLogger().error("", e);
+                return;
             }
+            this.getSLF4JLogger().info("%s成功，将玩家%s的进服次数加一".formatted(added ? "添加" : "更新", player.getName()));
         });
     }
 
@@ -436,22 +439,36 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         final PluginCommand command = this.getCommand("zanzhu");
         assert command != null;
         command.setExecutor((commandSender, command1, s, strings) -> {
-            if (this.playerOnlineTimeApi == null) return true;
-            if (this.sponsorshipApi == null) return true;
 
             if (!(commandSender instanceof final Player player)) {
-                this.sendError(commandSender);
+                this.sendError(commandSender, "该命令只能由玩家来执行");
                 return true;
             }
 
+            final SponsorshipApi2 api = this.sponsorshipApi;
+            final PlayerOnlineTimeApi api2 = this.playerOnlineTimeApi;
+
+            if (api == null || api2 == null) {
+                this.sendError(commandSender, "API不可用！");
+                return true;
+            }
+
+
             this.taskScheduler.runTaskAsynchronously(() -> {
 
-                final SponsorshipApi2 api1 = this.sponsorshipApi;
-                assert api1 != null;
+                final OnlineTimeAndJoinCount info;
+
+                try {
+                    info = api2.queryTotal(player.getUniqueId());
+                } catch (Exception e) {
+                    this.getSLF4JLogger().error("", e);
+                    this.sendException(player, e);
+                    return;
+                }
 
                 final TextComponent.Builder text = Component.text();
 
-                api1.appendPromptMessage(text, player.getUniqueId());
+                api.appendPromptMessage(text, player.getUniqueId(), info.jointCount() + 1, info.onlineTime());
 
                 player.sendMessage(text.build());
             });

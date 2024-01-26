@@ -182,7 +182,7 @@
         <dependency>
             <groupId>com.github.PaperCardDev</groupId>
             <artifactId>sponsorship-api</artifactId>
-            <version>1.1</version>
+            <version>1.2</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
