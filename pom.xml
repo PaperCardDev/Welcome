@@ -106,20 +106,6 @@
 
         <dependency>
             <groupId>cn.paper_card</groupId>
-            <artifactId>Sponsorship</artifactId>
-            <version>1.0</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>cn.paper_card</groupId>
-            <artifactId>PlayerOnlineTime</artifactId>
-            <version>1.0</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>cn.paper_card</groupId>
             <artifactId>PaperCardTip</artifactId>
             <version>1.0</version>
             <scope>provided</scope>
@@ -161,7 +147,7 @@
         <dependency>
             <groupId>com.github.PaperCardDev</groupId>
             <artifactId>qq-group-access-api</artifactId>
-            <version>1.1</version>
+            <version>1.2.1</version>
             <scope>provided</scope>
         </dependency>
 
@@ -182,6 +168,20 @@
         <dependency>
             <groupId>com.github.PaperCardDev</groupId>
             <artifactId>qq-group-member-info-api</artifactId>
+            <version>1.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.PaperCardDev</groupId>
+            <artifactId>player-online-time-api</artifactId>
+            <version>1.2</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.PaperCardDev</groupId>
+            <artifactId>sponsorship-api</artifactId>
             <version>1.1</version>
             <scope>provided</scope>
         </dependency>

@@ -1,8 +1,9 @@
 package cn.paper_card.welcome;
 
 import cn.paper_card.paper_card_tip.PaperCardTipApi;
+import cn.paper_card.paper_online_time.api.OnlineTimeAndJoinCount;
+import cn.paper_card.paper_online_time.api.PlayerOnlineTimeApi;
 import cn.paper_card.player_gender.PlayerGenderApi;
-import cn.paper_card.player_online_time.PlayerOnlineTimeApi;
 import cn.paper_card.player_title.api.PlayerTitleApi;
 import cn.paper_card.player_title.api.PlayerTitleInfoInUse;
 import cn.paper_card.player_title.api.PlayerTitleService;
@@ -15,7 +16,8 @@ import cn.paper_card.qq_group_member_info.api.QqGroupMemberInfoApi;
 import cn.paper_card.qq_group_member_info.api.QqGroupMemberInfoService;
 import cn.paper_card.smurf.api.SmurfApi;
 import cn.paper_card.smurf.api.SmurfInfo;
-import cn.paper_card.sponsorship.SponsorshipApi;
+import cn.paper_card.sponsorship.api.SponsorshipApi2;
+import cn.paper_card.sponsorship.api.SponsorshipPlayerInfo;
 import com.github.Anon8281.universalScheduler.UniversalScheduler;
 import com.github.Anon8281.universalScheduler.scheduling.schedulers.TaskScheduler;
 import de.themoep.minedown.adventure.MineDown;
@@ -38,6 +40,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.ServicesManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -47,7 +50,7 @@ import java.util.List;
 
 public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
 
-    private SponsorshipApi sponsorshipApi = null;
+    private SponsorshipApi2 sponsorshipApi = null;
 
     private PlayerOnlineTimeApi playerOnlineTimeApi = null;
 
@@ -78,25 +81,9 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
 
     private final @NotNull TextComponent prefix;
 
-    private @Nullable PlayerOnlineTimeApi getPlayerOnlineTimeApi() {
-        final Plugin p = this.getServer().getPluginManager().getPlugin("PlayerOnlineTime");
-        if (p instanceof final PlayerOnlineTimeApi api) {
-            return api;
-        }
-        return null;
-    }
-
     private @Nullable PaperCardTipApi getPaperCardTipApi() {
         final Plugin p = this.getServer().getPluginManager().getPlugin("PaperCardTip");
         if (p instanceof final PaperCardTipApi api) {
-            return api;
-        }
-        return null;
-    }
-
-    private @Nullable SponsorshipApi getSponsorshipApi() {
-        final Plugin plugin = this.getServer().getPluginManager().getPlugin("Sponsorship");
-        if (plugin instanceof final SponsorshipApi api) {
             return api;
         }
         return null;
@@ -110,11 +97,11 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         return null;
     }
 
-    void sendError(@NotNull CommandSender sender, @NotNull String error) {
+    void sendError(@NotNull CommandSender sender) {
         sender.sendMessage(Component.text()
                 .append(this.prefix)
                 .appendSpace()
-                .append(Component.text(error).color(NamedTextColor.RED))
+                .append(Component.text("该命令只能由玩家来执行").color(NamedTextColor.RED))
         );
     }
 
@@ -301,45 +288,56 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
             try {
                 if (showQqBindTip(player)) return;
             } catch (Exception e) {
-                getSLF4JLogger().error("", e);
-                sendException(player, e);
-                return;
+                this.getSLF4JLogger().error("", e);
+                this.sendException(player, e);
             }
 
-            if (this.playerOnlineTimeApi == null) return;
+            final PlayerOnlineTimeApi playerOnlineTimeApi1 = this.playerOnlineTimeApi;
+
+            if (playerOnlineTimeApi1 == null) return;
 
             // 查询进入次数和总计在线时长
-            final PlayerOnlineTimeApi.OnlineTimeAndJoinCount onlineTimeAndJoinCount;
+            final OnlineTimeAndJoinCount onlineTimeAndJoinCount;
 
             try {
-                onlineTimeAndJoinCount = this.playerOnlineTimeApi.queryTotalOnlineAndJoinCount(player.getUniqueId());
+                onlineTimeAndJoinCount = playerOnlineTimeApi1.queryTotal(player.getUniqueId());
             } catch (Exception e) {
-                getSLF4JLogger().error("", e);
-                sendException(player, e);
+                this.getSLF4JLogger().error("", e);
+                this.sendException(player, e);
                 return;
             }
 
-            getSLF4JLogger().info("玩家%s的总进入次数：%d，在线时长：%d".formatted(player.getName(),
+            this.getSLF4JLogger().info("玩家%s的总进入次数：%d，在线时长：%d".formatted(player.getName(),
                     onlineTimeAndJoinCount.jointCount(), onlineTimeAndJoinCount.onlineTime()));
 
             final long joinNo = onlineTimeAndJoinCount.jointCount() + 1;
 
             if (joinNo % 20 == 0) {
+                final SponsorshipApi2 sponsorshipApi1 = this.sponsorshipApi;
                 // 提示赞助
-                if (this.sponsorshipApi != null) {
-                    final TextComponent message = this.sponsorshipApi.buildPromptMessage(player, joinNo, onlineTimeAndJoinCount.onlineTime());
-                    player.sendMessage(message);
+                if (sponsorshipApi1 != null) {
+                    final TextComponent.Builder text = Component.text();
+                    sponsorshipApi1.appendPromptMessage(text, player.getUniqueId());
+                    player.sendMessage(text.build());
                 }
             } else {
                 // 提示TIP
-                if (this.paperCardTipApi != null) {
+                final PaperCardTipApi paperCardTipApi1 = this.paperCardTipApi;
+                if (paperCardTipApi1 != null) {
                     try {
-                        this.showTipForPlayer(player, this.paperCardTipApi);
+                        this.showTipForPlayer(player, paperCardTipApi1);
                     } catch (Exception e) {
-                        getSLF4JLogger().error("", e);
-                        sendException(player, e);
+                        this.getSLF4JLogger().error("", e);
+                        this.sendException(player, e);
                     }
                 }
+            }
+
+            // 添加进服次数
+            try {
+                playerOnlineTimeApi1.addJoinCountToday(player.getUniqueId(), System.currentTimeMillis());
+            } catch (Exception e) {
+                getSLF4JLogger().error("", e);
             }
         });
     }
@@ -416,19 +414,19 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
             return true;
         });
 
-        this.sponsorshipApi = this.getSponsorshipApi();
-        this.playerOnlineTimeApi = this.getPlayerOnlineTimeApi();
+        final ServicesManager servicesManager = this.getServer().getServicesManager();
+
+        this.sponsorshipApi = servicesManager.load(SponsorshipApi2.class);
+        this.playerOnlineTimeApi = servicesManager.load(PlayerOnlineTimeApi.class);
         this.paperCardTipApi = this.getPaperCardTipApi();
         this.playerGenderApi = this.getPlayerGenderApi();
 
-        this.qqBindApi = this.getServer().getServicesManager().load(QqBindApi.class);
-        this.smurfApi = this.getServer().getServicesManager().load(SmurfApi.class);
+        this.qqBindApi = servicesManager.load(QqBindApi.class);
+        this.smurfApi = servicesManager.load(SmurfApi.class);
+        this.playerTitleApi = servicesManager.load(PlayerTitleApi.class);
+        this.qqGroupMemberInfoApi = servicesManager.load(QqGroupMemberInfoApi.class);
 
-        this.playerTitleApi = this.getServer().getServicesManager().load(PlayerTitleApi.class);
-
-        this.qqGroupMemberInfoApi = this.getServer().getServicesManager().load(QqGroupMemberInfoApi.class);
-
-        this.qqGroupAccessApi = this.getServer().getServicesManager().load(QqGroupAccessApi.class);
+        this.qqGroupAccessApi = servicesManager.load(QqGroupAccessApi.class);
         if (this.qqGroupAccessApi == null) {
             getSLF4JLogger().warn("未连接到QqGroupAccessApi");
         } else {
@@ -442,30 +440,62 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
             if (this.sponsorshipApi == null) return true;
 
             if (!(commandSender instanceof final Player player)) {
-                this.sendError(commandSender, "该命令只能由玩家来执行");
+                this.sendError(commandSender);
                 return true;
             }
 
             this.taskScheduler.runTaskAsynchronously(() -> {
-                final PlayerOnlineTimeApi.OnlineTimeAndJoinCount info;
 
-                try {
-                    info = this.playerOnlineTimeApi.queryTotalOnlineAndJoinCount(player.getUniqueId());
-                } catch (Exception e) {
-                    getSLF4JLogger().error("", e);
-                    this.sendError(commandSender, e.toString());
-                    return;
-                }
+                final SponsorshipApi2 api1 = this.sponsorshipApi;
+                assert api1 != null;
 
-                final TextComponent message = this.sponsorshipApi.buildPromptMessage(player,
-                        info.jointCount() + 1, info.onlineTime());
+                final TextComponent.Builder text = Component.text();
 
-                player.sendMessage(message);
+                api1.appendPromptMessage(text, player.getUniqueId());
 
+                player.sendMessage(text.build());
             });
 
             return true;
         });
+    }
+
+    @Override
+    public void onDisable() {
+        this.taskScheduler.cancelTasks(this);
+    }
+
+    private boolean handleSponsorshipTitle(@NotNull TextComponent.Builder text, @NotNull Player player) {
+        // 赞助头衔
+        final SponsorshipApi2 api = this.sponsorshipApi;
+
+        if (api == null) return false;
+
+        final SponsorshipPlayerInfo info;
+        try {
+            info = api.getSponsorshipService().queryPlayerInfo(player.getUniqueId());
+        } catch (Exception e) {
+            getSLF4JLogger().error("", e);
+            return false;
+        }
+
+        if (info == null) return false;
+
+
+        if (info.totalMoney() >= 10000) {
+            final Component t = new MineDown("&#FF1493-#FF0000&『赞助』").toComponent();
+            text.append(t);
+            text.appendSpace();
+        } else if (info.totalMoney() >= 1000) {
+            text.append(Component.text("『").color(TextColor.fromHexString("#33CCFF")));
+            text.append(Component.text("赞助").color(NamedTextColor.AQUA));
+            text.append(Component.text("』").color(TextColor.fromHexString("#33CCFF")));
+            text.appendSpace();
+        } else {
+            return false;
+        }
+
+        return true;
     }
 
     @Override
@@ -551,29 +581,9 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
 
 
         // 赞助头衔
-        if (!prefixSet && this.sponsorshipApi != null) {
-            final SponsorshipApi.Info3 info3;
-            try {
-                info3 = this.sponsorshipApi.queryTimeAndTotal(player.getUniqueId());
-                if (info3 != null) {
-                    if (info3.total() >= 10000) {
-                        text.append(Component.text("[").color(TextColor.fromHexString("#33CCFF")));
-                        text.append(Component.text("赞助").color(TextColor.fromHexString("#C71585")));
-                        text.append(Component.text("]").color(TextColor.fromHexString("#33CCFF")));
-                        text.appendSpace();
-                        prefixSet = true;
-                    } else if (info3.total() >= 1000) {
-                        text.append(Component.text("[").color(TextColor.fromHexString("#33CCFF")));
-                        text.append(Component.text("赞助").color(NamedTextColor.AQUA));
-                        text.append(Component.text("]").color(TextColor.fromHexString("#33CCFF")));
-                        text.appendSpace();
-                        prefixSet = true;
-                    }
-                }
-            } catch (Exception e) {
-                getSLF4JLogger().error("", e);
-            }
-        }
+        if (!prefixSet)
+            prefixSet = this.handleSponsorshipTitle(text, player);
+
 
         // 萌新头衔
         if (!prefixSet && (firstPlayed <= 0 || delta < 7 * 24 * 60 * 60 * 1000L)) {
