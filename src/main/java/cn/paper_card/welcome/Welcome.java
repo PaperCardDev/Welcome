@@ -74,7 +74,7 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         this.taskScheduler = UniversalScheduler.getScheduler(this);
         this.prefix = Component.text()
                 .append(Component.text("[").color(NamedTextColor.DARK_GRAY))
-                .append(Component.text(this.getName()).color(NamedTextColor.YELLOW))
+                .append(Component.text(this.getName()).color(NamedTextColor.DARK_AQUA))
                 .append(Component.text("]").color(NamedTextColor.DARK_GRAY))
                 .build();
     }
@@ -205,6 +205,35 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
                 .build();
     }
 
+    void tipJoinGroup(@NotNull Player player, @NotNull GroupAccess access) {
+        final TextComponent.Builder text = Component.text();
+        text.append(this.prefix);
+        text.appendSpace();
+        text.append(Component.text("您还未加入任何一个QQ交流群，"));
+
+        text.appendNewline();
+        text.append(Component.text("请加入任意一个QQ群（点击可复制群号）："));
+
+        final String str = "%d".formatted(access.getId());
+        text.appendNewline();
+        text.append(Component.text("[").color(NamedTextColor.GRAY));
+        text.append(Component.text(str)
+                .color(NamedTextColor.RED).decorate(TextDecoration.UNDERLINED).decorate(TextDecoration.BOLD)
+                .clickEvent(ClickEvent.copyToClipboard(str))
+                .hoverEvent(HoverEvent.showText(Component.text("点击复制QQ群号")))
+        );
+        text.append(Component.text("]").color(NamedTextColor.GRAY));
+
+        text.appendNewline();
+        text.append(Component.text("加入任意一个QQ群后此消息不再显示").color(NamedTextColor.GRAY));
+
+        text.appendNewline();
+        text.append(Component.text("若您已经加群，请在群内发送任意消息以更新信息").color(NamedTextColor.GRAY));
+
+        player.sendMessage(text.build().color(NamedTextColor.YELLOW));
+    }
+
+    // 提示玩家加入交流群，自动修改群昵称为游戏名
     void checkGroupNameCard(@NotNull BindInfo bindInfo, @NotNull Player player, @NotNull GroupAccess access) throws Exception {
         final QqGroupMemberInfoApi api = this.qqGroupMemberInfoApi;
         if (api == null) return;
@@ -216,8 +245,11 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         // 未记录
         if (qqInfo == null) return;
 
-        // 不在群
-        if (!qqInfo.inGroup()) return;
+        // 不在群，提示加群
+        if (!qqInfo.inGroup()) {
+            this.tipJoinGroup(player, access);
+            return;
+        }
 
         // 符合规范
         if (qqInfo.nameCard().startsWith(player.getName())) {
@@ -250,7 +282,7 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
 
         // 已经绑定了
         if (bindInfo != null) {
-            // 检查群昵称
+            // 检查群昵称，是否在群
             this.checkGroupNameCard(bindInfo, player, access);
             return false;
         }
@@ -269,13 +301,16 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         final TextComponent.Builder text = Component.text();
         text.append(this.prefix);
         text.appendSpace();
-        text.append(Component.text("你还没有绑定QQ，请先绑定一下QQ哦").color(NamedTextColor.GREEN));
+        text.append(Component.text("您还没有绑定QQ，请先绑定一下QQ哦"));
         text.appendSpace();
         text.append(Component.text("[点击绑定QQ]").color(NamedTextColor.GRAY).decorate(TextDecoration.UNDERLINED)
                 .clickEvent(ClickEvent.runCommand("/qq-bind code"))
                 .hoverEvent(HoverEvent.showText(Component.text("点击生成绑定验证码"))));
 
-        player.sendMessage(text.build());
+        text.appendNewline();
+        text.append(Component.text("完成QQ绑定后不再显示此消息").color(NamedTextColor.GRAY));
+
+        player.sendMessage(text.build().color(NamedTextColor.YELLOW));
 
         return true;
     }
@@ -291,6 +326,8 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
                 this.getSLF4JLogger().error("", e);
                 this.sendException(player, e);
             }
+
+            // todo
 
             final PlayerOnlineTimeApi playerOnlineTimeApi1 = this.playerOnlineTimeApi;
 
