@@ -18,6 +18,7 @@ import cn.paper_card.smurf.api.SmurfApi;
 import cn.paper_card.smurf.api.SmurfInfo;
 import cn.paper_card.sponsorship.api.SponsorshipApi2;
 import cn.paper_card.sponsorship.api.SponsorshipPlayerInfo;
+import cn.paper_card.welcome.api.WelcomeApi;
 import com.github.Anon8281.universalScheduler.UniversalScheduler;
 import com.github.Anon8281.universalScheduler.scheduling.schedulers.TaskScheduler;
 import de.themoep.minedown.adventure.MineDown;
@@ -40,6 +41,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.ServicesManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -70,6 +72,8 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
 
     private final @NotNull TaskScheduler taskScheduler;
 
+    private final @NotNull AdvancementTitle advancementTitle;
+
     public Welcome() {
         this.taskScheduler = UniversalScheduler.getScheduler(this);
         this.prefix = Component.text()
@@ -77,16 +81,14 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
                 .append(Component.text(this.getName()).color(NamedTextColor.DARK_AQUA))
                 .append(Component.text("]").color(NamedTextColor.DARK_GRAY))
                 .build();
+
+        this.advancementTitle = new AdvancementTitle(this);
     }
 
     private final @NotNull TextComponent prefix;
 
     private @Nullable PaperCardTipApi getPaperCardTipApi() {
-        final Plugin p = this.getServer().getPluginManager().getPlugin("PaperCardTip");
-        if (p instanceof final PaperCardTipApi api) {
-            return api;
-        }
-        return null;
+        return this.getServer().getServicesManager().load(PaperCardTipApi.class);
     }
 
     private @Nullable PlayerGenderApi getPlayerGenderApi() {
@@ -156,21 +158,48 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
 
         final Player player = event.getPlayer();
 
-        this.configDisplayName(player);
+        event.joinMessage(null);
 
-        final long firstPlayed = player.getFirstPlayed();
-        final long cur = System.currentTimeMillis();
-        final long delta = cur - firstPlayed;
+        this.taskScheduler.runTaskAsynchronously(() -> {
 
-        // 萌新欢迎语
-        if (delta < 24 * 60 * 60 * 1000L) {
+            try {
+                this.advancementTitle.check(player);
+            } catch (Exception e) {
+                getSLF4JLogger().error("", e);
+            }
 
-            event.joinMessage(Component.text()
-                    .append(player.displayName())
-                    .append(Component.space())
-                    .append(Component.text("欢迎萌新~").color(NamedTextColor.LIGHT_PURPLE).decorate(TextDecoration.BOLD))
-                    .build());
+            // 计算displayName
+            this.configDisplayName(player);
 
+            final long firstPlayed = player.getFirstPlayed();
+            final long cur = System.currentTimeMillis();
+            final long delta = cur - firstPlayed;
+
+            final Component joinMessage;
+
+            // 萌新欢迎语
+            if (delta < 24 * 60 * 60 * 1000L) {
+
+                joinMessage = Component.text()
+                        .append(player.displayName())
+                        .append(Component.space())
+                        .append(Component.text("欢迎萌新~").color(NamedTextColor.LIGHT_PURPLE).decorate(TextDecoration.BOLD))
+                        .build();
+
+
+            } else {
+
+                joinMessage = Component.text()
+                        .append(player.displayName())
+                        .append(Component.space())
+                        .append(Component.text("欢迎回来吖~").color(NamedTextColor.AQUA).decorate(TextDecoration.BOLD))
+                        .build();
+            }
+
+            // 关播join消息
+            getServer().broadcast(joinMessage);
+
+            // 第一次进入
             if (!player.hasPlayedBefore()) {
                 getServer().broadcast(Component.text()
                         .append(player.displayName())
@@ -181,18 +210,9 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
                 this.taskScheduler.runTaskAsynchronously(() -> this.sendFirstJoinToQqGroup(player));
             }
 
-        } else {
-
-            event.joinMessage(Component.text()
-                    .append(player.displayName())
-                    .append(Component.space())
-                    .append(Component.text("欢迎回来吖~").color(NamedTextColor.AQUA).decorate(TextDecoration.BOLD))
-                    .build());
-
-        }
-
-        // 增加进服次数
-        this.onJoinAddCount(player);
+            // 增加进服次数
+            this.onJoinAddCount(player);
+        });
     }
 
     private @NotNull TextComponent buildTip(@NotNull PaperCardTipApi.Tip tip) {
@@ -267,16 +287,16 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         access.sendAtMessage(qqInfo.qq(), "\n已自动修改你的群昵称为游戏名：" + player.getName());
     }
 
-    private boolean showQqBindTip(@NotNull Player player) throws Exception {
+    private void showQqBindTip(@NotNull Player player) throws Exception {
         final QqBindApi qqBindApi1 = this.qqBindApi;
         final SmurfApi smurfApi1 = this.smurfApi;
         final QqGroupAccessApi qqGroupAccessApi1 = this.qqGroupAccessApi;
 
-        if (qqBindApi1 == null) return false;
-        if (qqGroupAccessApi1 == null) return false;
+        if (qqBindApi1 == null) return;
+        if (qqGroupAccessApi1 == null) return;
 
         final GroupAccess access = this.createMainGroupAccess();
-        if (access == null) return false;
+        if (access == null) return;
 
         final BindInfo bindInfo = qqBindApi1.getBindService().queryByUuid(player.getUniqueId());
 
@@ -284,7 +304,7 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         if (bindInfo != null) {
             // 检查群昵称，是否在群
             this.checkGroupNameCard(bindInfo, player, access);
-            return false;
+            return;
         }
 
         // 未绑定
@@ -293,7 +313,7 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         if (smurfApi1 != null) {
             final SmurfInfo smurfInfo = smurfApi1.getSmurfService().queryBySmurfUuid(player.getUniqueId());
             // 不要求小号进行QQ绑定
-            if (smurfInfo != null) return false;
+            if (smurfInfo != null) return;
         }
 
         // 非小号、且未绑定
@@ -312,22 +332,11 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
 
         player.sendMessage(text.build().color(NamedTextColor.YELLOW));
 
-        return true;
     }
 
     private void onJoinAddCount(@NotNull Player player) {
 
         this.taskScheduler.runTaskAsynchronously(() -> {
-
-            // 没有QQ绑定的话，提示一下绑定QQ
-            try {
-                if (showQqBindTip(player)) return;
-            } catch (Exception e) {
-                this.getSLF4JLogger().error("", e);
-                this.sendException(player, e);
-            }
-
-            // todo
 
             final PlayerOnlineTimeApi playerOnlineTimeApi1 = this.playerOnlineTimeApi;
 
@@ -379,6 +388,14 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
                 return;
             }
             this.getSLF4JLogger().info("%s成功，将玩家%s的进服次数加一".formatted(added ? "添加" : "更新", player.getName()));
+
+            // 没有QQ绑定的话，提示一下绑定QQ
+            try {
+                showQqBindTip(player);
+            } catch (Exception e) {
+                this.getSLF4JLogger().error("", e);
+                this.sendException(player, e);
+            }
         });
     }
 
@@ -409,6 +426,11 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
                 .append(Component.space())
                 .append(Component.text("等你回来哟~").color(NamedTextColor.AQUA).decorate(TextDecoration.BOLD))
                 .build());
+    }
+
+    @Override
+    public void onLoad() {
+        this.getServer().getServicesManager().register(WelcomeApi.class, this, this, ServicePriority.High);
     }
 
     @Override
@@ -463,7 +485,12 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
 
         this.qqBindApi = servicesManager.load(QqBindApi.class);
         this.smurfApi = servicesManager.load(SmurfApi.class);
+
         this.playerTitleApi = servicesManager.load(PlayerTitleApi.class);
+        if (this.playerTitleApi == null) {
+            this.getSLF4JLogger().warn("Fail to link PlayerTitleApi");
+        }
+
         this.qqGroupMemberInfoApi = servicesManager.load(QqGroupMemberInfoApi.class);
 
         this.qqGroupAccessApi = servicesManager.load(QqGroupAccessApi.class);
@@ -517,6 +544,7 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
     @Override
     public void onDisable() {
         this.taskScheduler.cancelTasks(this);
+        this.getServer().getServicesManager().unregisterAll(this);
     }
 
     private boolean handleSponsorshipTitle(@NotNull TextComponent.Builder text, @NotNull Player player) {
@@ -552,13 +580,18 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         return true;
     }
 
-    @Override
-    public void configDisplayName(@NotNull Player player) {
+    @Nullable PlayerTitleApi getPlayerTitleApi() {
+        return this.playerTitleApi;
+    }
+
+    void configDisplayName0(@NotNull Player player) {
 
         final long firstPlayed = player.getFirstPlayed();
         final long delta = System.currentTimeMillis() - firstPlayed;
 
         final NamedTextColor nameColor = player.isOp() ? NamedTextColor.DARK_RED : NamedTextColor.WHITE;
+
+//        final NamedTextColor nameColor = NamedTextColor.GREEN;
 
         final TextComponent.Builder text = Component.text();
 
@@ -591,7 +624,7 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
             try {
                 genderType = this.playerGenderApi.queryGender(player.getUniqueId());
                 if (genderType == PlayerGenderApi.GenderType.FEMALE) {
-                    text.append(new MineDown("&#fff0f5-#ff69b4&[妹纸]").toComponent());
+                    text.append(new MineDown("&#fff0f5-#ff69b4&『妹纸』").toComponent());
                     text.appendSpace();
                     prefixSet = true;
                 }
@@ -602,37 +635,6 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         }
 
         // 全成就头衔
-        if (!prefixSet) {
-            boolean allDone = true;
-            final Iterator<Advancement> advancementIterator = this.getServer().advancementIterator();
-            while (advancementIterator.hasNext()) {
-                final Advancement next = advancementIterator.next();
-                final AdvancementProgress advancementProgress = player.getAdvancementProgress(next);
-
-                final AdvancementDisplay display = next.getDisplay();
-                if (display == null) continue;
-
-                if (!advancementProgress.isDone()) {
-                    final TextComponent.Builder builder = Component.text();
-                    builder.append(Component.text("玩家%s未完成成就：".formatted(player.getName())));
-                    builder.append(next.displayName());
-
-                    this.getServer().getConsoleSender().sendMessage(builder.build());
-
-                    allDone = false;
-                    break;
-                }
-            }
-
-            if (allDone) {
-                text.append(Component.text("[").color(TextColor.fromHexString("#EE6363")));
-                text.append(Component.text("登峰造极").color(NamedTextColor.DARK_PURPLE));
-                text.append(Component.text("]").color(TextColor.fromHexString("#EE6363")));
-                text.appendSpace();
-                prefixSet = true;
-            }
-        }
-
 
         // 赞助头衔
         if (!prefixSet)
@@ -641,7 +643,7 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
 
         // 萌新头衔
         if (!prefixSet && (firstPlayed <= 0 || delta < 7 * 24 * 60 * 60 * 1000L)) {
-            text.append(Component.text("[萌新]").color(NamedTextColor.LIGHT_PURPLE));
+            text.append(Component.text("『萌新』").color(NamedTextColor.LIGHT_PURPLE));
             text.appendSpace();
         }
 
@@ -650,5 +652,10 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         player.displayName(text.build());
         player.customName(player.displayName());
         player.setCustomNameVisible(true);
+    }
+
+    @Override
+    public void configDisplayName(Object o) {
+        this.configDisplayName0((Player) o);
     }
 }

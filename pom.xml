@@ -105,6 +105,12 @@
         </dependency>
 
         <dependency>
+            <groupId>cn.paper-card</groupId>
+            <artifactId>welcome-api</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <dependency>
             <groupId>cn.paper_card</groupId>
             <artifactId>PaperCardTip</artifactId>
             <version>1.0</version>
@@ -133,7 +139,7 @@
         <dependency>
             <groupId>com.github.PaperCardDev</groupId>
             <artifactId>player-title-api</artifactId>
-            <version>1.1.0</version>
+            <version>1.2</version>
             <scope>provided</scope>
         </dependency>
 
