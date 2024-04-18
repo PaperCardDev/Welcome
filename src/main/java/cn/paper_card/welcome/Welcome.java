@@ -57,9 +57,6 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
     private PlayerOnlineTimeApi playerOnlineTimeApi = null;
 
     private PaperCardTipApi paperCardTipApi = null;
-
-    private PlayerGenderApi playerGenderApi = null;
-
     private PlayerTitleApi playerTitleApi = null;
 
     private QqGroupAccessApi qqGroupAccessApi = null;
@@ -74,6 +71,8 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
 
     private final @NotNull AdvancementTitle advancementTitle;
 
+    private final @NotNull GirlTitle girlTitle;
+
     public Welcome() {
         this.taskScheduler = UniversalScheduler.getScheduler(this);
         this.prefix = Component.text()
@@ -83,6 +82,7 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
                 .build();
 
         this.advancementTitle = new AdvancementTitle(this);
+        this.girlTitle = new GirlTitle(this);
     }
 
     private final @NotNull TextComponent prefix;
@@ -91,7 +91,7 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         return this.getServer().getServicesManager().load(PaperCardTipApi.class);
     }
 
-    private @Nullable PlayerGenderApi getPlayerGenderApi() {
+    @Nullable PlayerGenderApi getPlayerGenderApi() {
         final Plugin plugin = this.getServer().getPluginManager().getPlugin("PlayerGender");
         if (plugin instanceof final PlayerGenderApi api) {
             return api;
@@ -164,6 +164,12 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
 
             try {
                 this.advancementTitle.check(player);
+            } catch (Exception e) {
+                getSLF4JLogger().error("", e);
+            }
+
+            try {
+                this.girlTitle.check(player);
             } catch (Exception e) {
                 getSLF4JLogger().error("", e);
             }
@@ -481,7 +487,6 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         this.sponsorshipApi = servicesManager.load(SponsorshipApi2.class);
         this.playerOnlineTimeApi = servicesManager.load(PlayerOnlineTimeApi.class);
         this.paperCardTipApi = this.getPaperCardTipApi();
-        this.playerGenderApi = this.getPlayerGenderApi();
 
         this.qqBindApi = servicesManager.load(QqBindApi.class);
         this.smurfApi = servicesManager.load(SmurfApi.class);
@@ -584,6 +589,7 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         return this.playerTitleApi;
     }
 
+
     void configDisplayName0(@NotNull Player player) {
 
         final long firstPlayed = player.getFirstPlayed();
@@ -618,21 +624,6 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
 
         // 妹纸头衔
         // &#fff0f5-#ff69b4&[妹纸]
-        if (!prefixSet && this.playerGenderApi != null) {
-            final PlayerGenderApi.GenderType genderType;
-
-            try {
-                genderType = this.playerGenderApi.queryGender(player.getUniqueId());
-                if (genderType == PlayerGenderApi.GenderType.FEMALE) {
-                    text.append(new MineDown("&#fff0f5-#ff69b4&『妹纸』").toComponent());
-                    text.appendSpace();
-                    prefixSet = true;
-                }
-
-            } catch (Exception e) {
-                getSLF4JLogger().error("", e);
-            }
-        }
 
         // 全成就头衔
 
