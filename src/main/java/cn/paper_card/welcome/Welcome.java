@@ -7,15 +7,8 @@ import cn.paper_card.player_gender.PlayerGenderApi;
 import cn.paper_card.player_title.api.PlayerTitleApi;
 import cn.paper_card.player_title.api.PlayerTitleInfoInUse;
 import cn.paper_card.player_title.api.PlayerTitleService;
-import cn.paper_card.qq_bind.api.BindInfo;
-import cn.paper_card.qq_bind.api.QqBindApi;
-import cn.paper_card.qq_group_access.api.GroupAccess;
-import cn.paper_card.qq_group_access.api.QqGroupAccessApi;
-import cn.paper_card.qq_group_member_info.api.QqGroupMemberInfo;
 import cn.paper_card.qq_group_member_info.api.QqGroupMemberInfoApi;
-import cn.paper_card.qq_group_member_info.api.QqGroupMemberInfoService;
 import cn.paper_card.smurf.api.SmurfApi;
-import cn.paper_card.smurf.api.SmurfInfo;
 import cn.paper_card.sponsorship.api.SponsorshipApi2;
 import cn.paper_card.sponsorship.api.SponsorshipPlayerInfo;
 import cn.paper_card.welcome.api.WelcomeApi;
@@ -25,7 +18,6 @@ import de.themoep.minedown.adventure.MineDown;
 import io.papermc.paper.advancement.AdvancementDisplay;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
@@ -59,11 +51,11 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
     private PaperCardTipApi paperCardTipApi = null;
     private PlayerTitleApi playerTitleApi = null;
 
-    private QqGroupAccessApi qqGroupAccessApi = null;
+//    private QqGroupAccessApi qqGroupAccessApi = null;
 
     private QqGroupMemberInfoApi qqGroupMemberInfoApi = null;
 
-    private QqBindApi qqBindApi = null;
+//    private QqBindApi qqBindApi = null;
 
     private SmurfApi smurfApi = null;
 
@@ -120,37 +112,37 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         sender.sendMessage(text.build());
     }
 
-    private @Nullable GroupAccess createMainGroupAccess() {
-        final QqGroupAccessApi api = this.qqGroupAccessApi;
-        if (api == null) return null;
-
-        try {
-            return api.createMainGroupAccess();
-        } catch (Exception e) {
-            getSLF4JLogger().warn(e.toString());
-        }
-        return null;
-    }
+//    private @Nullable GroupAccess createMainGroupAccess() {
+//        final QqGroupAccessApi api = this.qqGroupAccessApi;
+//        if (api == null) return null;
+//
+//        try {
+//            return api.createMainGroupAccess();
+//        } catch (Exception e) {
+//            getSLF4JLogger().warn(e.toString());
+//        }
+//        return null;
+//    }
 
     private void sendFirstJoinToQqGroup(@NotNull Player player) {
 
-
-        final String msg = """
-                [首次进入]
-                欢迎玩家 %s 加入PaperCard服务器(σ≧∀≦)σ
-                这是本周目第 %d 位玩家~""".formatted(player.getName(),
-                this.getServer().getOfflinePlayers().length);
-
-
-        final GroupAccess access = this.createMainGroupAccess();
-
-        if (access == null) return;
-
-        try {
-            access.sendNormalMessage(msg);
-        } catch (Exception e) {
-            getSLF4JLogger().error("sendNormalMessage", e);
-        }
+//
+//        final String msg = """
+//                [首次进入]
+//                欢迎玩家 %s 加入PaperCard服务器(σ≧∀≦)σ
+//                这是本周目第 %d 位玩家~""".formatted(player.getName(),
+//                this.getServer().getOfflinePlayers().length);
+//
+//
+//        final GroupAccess access = this.createMainGroupAccess();
+//
+//        if (access == null) return;
+//
+//        try {
+//            access.sendNormalMessage(msg);
+//        } catch (Exception e) {
+//            getSLF4JLogger().error("sendNormalMessage", e);
+//        }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -231,114 +223,114 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
                 .build();
     }
 
-    void tipJoinGroup(@NotNull Player player, @NotNull GroupAccess access) {
-        final TextComponent.Builder text = Component.text();
-        text.append(this.prefix);
-        text.appendSpace();
-        text.append(Component.text("您还未加入任何一个QQ交流群，"));
-
-        text.appendNewline();
-        text.append(Component.text("请加入任意一个QQ群（点击可复制群号）："));
-
-        final String str = "%d".formatted(access.getId());
-        text.appendNewline();
-        text.append(Component.text("[").color(NamedTextColor.GRAY));
-        text.append(Component.text(str)
-                .color(NamedTextColor.RED).decorate(TextDecoration.UNDERLINED).decorate(TextDecoration.BOLD)
-                .clickEvent(ClickEvent.copyToClipboard(str))
-                .hoverEvent(HoverEvent.showText(Component.text("点击复制QQ群号")))
-        );
-        text.append(Component.text("]").color(NamedTextColor.GRAY));
-
-        text.appendNewline();
-        text.append(Component.text("加入任意一个QQ群后此消息不再显示").color(NamedTextColor.GRAY));
-
-        text.appendNewline();
-        text.append(Component.text("若您已经加群，请在群内发送任意消息以更新信息").color(NamedTextColor.GRAY));
-
-        player.sendMessage(text.build().color(NamedTextColor.YELLOW));
-    }
+//    void tipJoinGroup(@NotNull Player player, @NotNull GroupAccess access) {
+//        final TextComponent.Builder text = Component.text();
+//        text.append(this.prefix);
+//        text.appendSpace();
+//        text.append(Component.text("您还未加入任何一个QQ交流群，"));
+//
+//        text.appendNewline();
+//        text.append(Component.text("请加入任意一个QQ群（点击可复制群号）："));
+//
+//        final String str = "%d".formatted(access.getId());
+//        text.appendNewline();
+//        text.append(Component.text("[").color(NamedTextColor.GRAY));
+//        text.append(Component.text(str)
+//                .color(NamedTextColor.RED).decorate(TextDecoration.UNDERLINED).decorate(TextDecoration.BOLD)
+//                .clickEvent(ClickEvent.copyToClipboard(str))
+//                .hoverEvent(HoverEvent.showText(Component.text("点击复制QQ群号")))
+//        );
+//        text.append(Component.text("]").color(NamedTextColor.GRAY));
+//
+//        text.appendNewline();
+//        text.append(Component.text("加入任意一个QQ群后此消息不再显示").color(NamedTextColor.GRAY));
+//
+//        text.appendNewline();
+//        text.append(Component.text("若您已经加群，请在群内发送任意消息以更新信息").color(NamedTextColor.GRAY));
+//
+//        player.sendMessage(text.build().color(NamedTextColor.YELLOW));
+//    }
 
     // 提示玩家加入交流群，自动修改群昵称为游戏名
-    void checkGroupNameCard(@NotNull BindInfo bindInfo, @NotNull Player player, @NotNull GroupAccess access) throws Exception {
-        final QqGroupMemberInfoApi api = this.qqGroupMemberInfoApi;
-        if (api == null) return;
+//    void checkGroupNameCard(@NotNull BindInfo bindInfo, @NotNull Player player, @NotNull GroupAccess access) throws Exception {
+//        final QqGroupMemberInfoApi api = this.qqGroupMemberInfoApi;
+//        if (api == null) return;
+//
+//        final QqGroupMemberInfoService service = api.getQqGroupMemberInfoService();
+//
+//        final QqGroupMemberInfo qqInfo = service.queryByQq(bindInfo.qq());
+//
+//        // 未记录
+//        if (qqInfo == null) return;
+//
+//        // 不在群，提示加群
+//        if (!qqInfo.inGroup()) {
+//            this.tipJoinGroup(player, access);
+//            return;
+//        }
+//
+//        // 符合规范
+//        if (qqInfo.nameCard().startsWith(player.getName())) {
+//            getSLF4JLogger().info("玩家 %s 的群昵称 %s 检查通过".formatted(player.getName(), qqInfo.nameCard()));
+//            return;
+//        }
+//
+//        // 修改群昵称
+//        access.setGroupMemberRemark(qqInfo.qq(), player.getName());
+//
+//        // 记录
+//        service.updateNameCard(qqInfo.qq(), player.getName());
+//
+//        // 发送消息
+//        access.sendAtMessage(qqInfo.qq(), "\n已自动修改你的群昵称为游戏名：" + player.getName());
+//    }
 
-        final QqGroupMemberInfoService service = api.getQqGroupMemberInfoService();
-
-        final QqGroupMemberInfo qqInfo = service.queryByQq(bindInfo.qq());
-
-        // 未记录
-        if (qqInfo == null) return;
-
-        // 不在群，提示加群
-        if (!qqInfo.inGroup()) {
-            this.tipJoinGroup(player, access);
-            return;
-        }
-
-        // 符合规范
-        if (qqInfo.nameCard().startsWith(player.getName())) {
-            getSLF4JLogger().info("玩家 %s 的群昵称 %s 检查通过".formatted(player.getName(), qqInfo.nameCard()));
-            return;
-        }
-
-        // 修改群昵称
-        access.setGroupMemberRemark(qqInfo.qq(), player.getName());
-
-        // 记录
-        service.updateNameCard(qqInfo.qq(), player.getName());
-
-        // 发送消息
-        access.sendAtMessage(qqInfo.qq(), "\n已自动修改你的群昵称为游戏名：" + player.getName());
-    }
-
-    private void showQqBindTip(@NotNull Player player) throws Exception {
-        final QqBindApi qqBindApi1 = this.qqBindApi;
-        final SmurfApi smurfApi1 = this.smurfApi;
-        final QqGroupAccessApi qqGroupAccessApi1 = this.qqGroupAccessApi;
-
-        if (qqBindApi1 == null) return;
-        if (qqGroupAccessApi1 == null) return;
-
-        final GroupAccess access = this.createMainGroupAccess();
-        if (access == null) return;
-
-        final BindInfo bindInfo = qqBindApi1.getBindService().queryByUuid(player.getUniqueId());
-
-        // 已经绑定了
-        if (bindInfo != null) {
-            // 检查群昵称，是否在群
-            this.checkGroupNameCard(bindInfo, player, access);
-            return;
-        }
-
-        // 未绑定
-
-        // 查询是不是小号，不要求小号进行绑定
-        if (smurfApi1 != null) {
-            final SmurfInfo smurfInfo = smurfApi1.getSmurfService().queryBySmurfUuid(player.getUniqueId());
-            // 不要求小号进行QQ绑定
-            if (smurfInfo != null) return;
-        }
-
-        // 非小号、且未绑定
-
-        final TextComponent.Builder text = Component.text();
-        text.append(this.prefix);
-        text.appendSpace();
-        text.append(Component.text("您还没有绑定QQ，请先绑定一下QQ哦"));
-        text.appendSpace();
-        text.append(Component.text("[点击绑定QQ]").color(NamedTextColor.GRAY).decorate(TextDecoration.UNDERLINED)
-                .clickEvent(ClickEvent.runCommand("/qq-bind code"))
-                .hoverEvent(HoverEvent.showText(Component.text("点击生成绑定验证码"))));
-
-        text.appendNewline();
-        text.append(Component.text("完成QQ绑定后不再显示此消息").color(NamedTextColor.GRAY));
-
-        player.sendMessage(text.build().color(NamedTextColor.YELLOW));
-
-    }
+//    private void showQqBindTip(@NotNull Player player) throws Exception {
+//        final QqBindApi qqBindApi1 = this.qqBindApi;
+//        final SmurfApi smurfApi1 = this.smurfApi;
+//        final QqGroupAccessApi qqGroupAccessApi1 = this.qqGroupAccessApi;
+//
+//        if (qqBindApi1 == null) return;
+//        if (qqGroupAccessApi1 == null) return;
+//
+//        final GroupAccess access = this.createMainGroupAccess();
+//        if (access == null) return;
+//
+//        final BindInfo bindInfo = qqBindApi1.getBindService().queryByUuid(player.getUniqueId());
+//
+//        // 已经绑定了
+//        if (bindInfo != null) {
+//            // 检查群昵称，是否在群
+//            this.checkGroupNameCard(bindInfo, player, access);
+//            return;
+//        }
+//
+//        // 未绑定
+//
+//        // 查询是不是小号，不要求小号进行绑定
+//        if (smurfApi1 != null) {
+//            final SmurfInfo smurfInfo = smurfApi1.getSmurfService().queryBySmurfUuid(player.getUniqueId());
+//            // 不要求小号进行QQ绑定
+//            if (smurfInfo != null) return;
+//        }
+//
+//        // 非小号、且未绑定
+//
+//        final TextComponent.Builder text = Component.text();
+//        text.append(this.prefix);
+//        text.appendSpace();
+//        text.append(Component.text("您还没有绑定QQ，请先绑定一下QQ哦"));
+//        text.appendSpace();
+//        text.append(Component.text("[点击绑定QQ]").color(NamedTextColor.GRAY).decorate(TextDecoration.UNDERLINED)
+//                .clickEvent(ClickEvent.runCommand("/qq-bind code"))
+//                .hoverEvent(HoverEvent.showText(Component.text("点击生成绑定验证码"))));
+//
+//        text.appendNewline();
+//        text.append(Component.text("完成QQ绑定后不再显示此消息").color(NamedTextColor.GRAY));
+//
+//        player.sendMessage(text.build().color(NamedTextColor.YELLOW));
+//
+//    }
 
     private void onJoinAddCount(@NotNull Player player) {
 
@@ -396,12 +388,12 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
             this.getSLF4JLogger().info("%s成功，将玩家%s的进服次数加一".formatted(added ? "添加" : "更新", player.getName()));
 
             // 没有QQ绑定的话，提示一下绑定QQ
-            try {
-                showQqBindTip(player);
-            } catch (Exception e) {
-                this.getSLF4JLogger().error("", e);
-                this.sendException(player, e);
-            }
+//            try {
+////                showQqBindTip(player);
+//            } catch (Exception e) {
+//                this.getSLF4JLogger().error("", e);
+//                this.sendException(player, e);
+//            }
         });
     }
 
@@ -488,7 +480,7 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         this.playerOnlineTimeApi = servicesManager.load(PlayerOnlineTimeApi.class);
         this.paperCardTipApi = this.getPaperCardTipApi();
 
-        this.qqBindApi = servicesManager.load(QqBindApi.class);
+//        this.qqBindApi = servicesManager.load(QqBindApi.class);
         this.smurfApi = servicesManager.load(SmurfApi.class);
 
         this.playerTitleApi = servicesManager.load(PlayerTitleApi.class);
@@ -498,12 +490,12 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
 
         this.qqGroupMemberInfoApi = servicesManager.load(QqGroupMemberInfoApi.class);
 
-        this.qqGroupAccessApi = servicesManager.load(QqGroupAccessApi.class);
-        if (this.qqGroupAccessApi == null) {
-            getSLF4JLogger().warn("未连接到QqGroupAccessApi");
-        } else {
-            getSLF4JLogger().info("已连接到QqGroupAccessApi");
-        }
+//        this.qqGroupAccessApi = servicesManager.load(QqGroupAccessApi.class);
+//        if (this.qqGroupAccessApi == null) {
+//            getSLF4JLogger().warn("未连接到QqGroupAccessApi");
+//        } else {
+//            getSLF4JLogger().info("已连接到QqGroupAccessApi");
+//        }
 
         final PluginCommand command = this.getCommand("zanzhu");
         assert command != null;
