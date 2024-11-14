@@ -7,8 +7,8 @@ import cn.paper_card.player_gender.PlayerGenderApi;
 import cn.paper_card.player_title.api.PlayerTitleApi;
 import cn.paper_card.player_title.api.PlayerTitleInfoInUse;
 import cn.paper_card.player_title.api.PlayerTitleService;
-import cn.paper_card.sponsorship.api.SponsorshipApi2;
-import cn.paper_card.sponsorship.api.SponsorshipPlayerInfo;
+//import cn.paper_card.sponsorship.api.SponsorshipApi2;
+//import cn.paper_card.sponsorship.api.SponsorshipPlayerInfo;
 import cn.paper_card.welcome.api.WelcomeApi;
 import com.github.Anon8281.universalScheduler.UniversalScheduler;
 import com.github.Anon8281.universalScheduler.scheduling.schedulers.TaskScheduler;
@@ -42,7 +42,7 @@ import java.util.List;
 
 public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
 
-    private SponsorshipApi2 sponsorshipApi = null;
+//    private SponsorshipApi2 sponsorshipApi = null;
 
     private PlayerOnlineTimeApi playerOnlineTimeApi = null;
 
@@ -202,26 +202,17 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
             this.getSLF4JLogger().info("玩家%s的总进入次数：%d，在线时长：%d".formatted(player.getName(),
                     onlineTimeAndJoinCount.jointCount(), onlineTimeAndJoinCount.onlineTime()));
 
-            final long joinNo = onlineTimeAndJoinCount.jointCount() + 1;
+//            final long joinNo = onlineTimeAndJoinCount.jointCount() + 1;
 
-            if (joinNo % 20 == 0) {
-                final SponsorshipApi2 sponsorshipApi1 = this.sponsorshipApi;
-                // 提示赞助
-                if (sponsorshipApi1 != null) {
-                    final TextComponent.Builder text = Component.text();
-                    sponsorshipApi1.appendPromptMessage(text, player.getUniqueId(), joinNo, onlineTimeAndJoinCount.onlineTime());
-                    player.sendMessage(text.build());
-                }
-            } else {
-                // 提示TIP
-                final PaperCardTipApi paperCardTipApi1 = this.paperCardTipApi;
-                if (paperCardTipApi1 != null) {
-                    try {
-                        this.showTipForPlayer(player, paperCardTipApi1);
-                    } catch (Exception e) {
-                        this.getSLF4JLogger().error("", e);
-                        this.sendException(player, e);
-                    }
+
+            // 提示TIP
+            final PaperCardTipApi paperCardTipApi1 = this.paperCardTipApi;
+            if (paperCardTipApi1 != null) {
+                try {
+                    this.showTipForPlayer(player, paperCardTipApi1);
+                } catch (Exception e) {
+                    this.getSLF4JLogger().error("", e);
+                    this.sendException(player, e);
                 }
             }
 
@@ -318,7 +309,7 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
 
         final ServicesManager servicesManager = this.getServer().getServicesManager();
 
-        this.sponsorshipApi = servicesManager.load(SponsorshipApi2.class);
+//        this.sponsorshipApi = servicesManager.load(SponsorshipApi2.class);
         this.playerOnlineTimeApi = servicesManager.load(PlayerOnlineTimeApi.class);
         this.paperCardTipApi = this.getPaperCardTipApi();
 
@@ -339,13 +330,13 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
                 return true;
             }
 
-            final SponsorshipApi2 api = this.sponsorshipApi;
+//            final SponsorshipApi2 api = this.sponsorshipApi;
             final PlayerOnlineTimeApi api2 = this.playerOnlineTimeApi;
 
-            if (api == null || api2 == null) {
-                this.sendError(commandSender, "API不可用！");
-                return true;
-            }
+//            if (api == null || api2 == null) {
+//                this.sendError(commandSender, "API不可用！");
+//                return true;
+//            }
 
 
             this.taskScheduler.runTaskAsynchronously(() -> {
@@ -362,7 +353,7 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
 
                 final TextComponent.Builder text = Component.text();
 
-                api.appendPromptMessage(text, player.getUniqueId(), info.jointCount() + 1, info.onlineTime());
+//                api.appendPromptMessage(text, player.getUniqueId(), info.jointCount() + 1, info.onlineTime());
 
                 player.sendMessage(text.build());
             });
@@ -377,38 +368,38 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         this.getServer().getServicesManager().unregisterAll(this);
     }
 
-    private boolean handleSponsorshipTitle(@NotNull TextComponent.Builder text, @NotNull Player player) {
-        // 赞助头衔
-        final SponsorshipApi2 api = this.sponsorshipApi;
-
-        if (api == null) return false;
-
-        final SponsorshipPlayerInfo info;
-        try {
-            info = api.getSponsorshipService().queryPlayerInfo(player.getUniqueId());
-        } catch (Exception e) {
-            getSLF4JLogger().error("", e);
-            return false;
-        }
-
-        if (info == null) return false;
-
-
-        if (info.totalMoney() >= 10000) {
-            final Component t = new MineDown("&#FF1493-#FF0000&『赞助』").toComponent();
-            text.append(t);
-            text.appendSpace();
-        } else if (info.totalMoney() >= 1000) {
-            text.append(Component.text("『").color(TextColor.fromHexString("#33CCFF")));
-            text.append(Component.text("赞助").color(NamedTextColor.AQUA));
-            text.append(Component.text("』").color(TextColor.fromHexString("#33CCFF")));
-            text.appendSpace();
-        } else {
-            return false;
-        }
-
-        return true;
-    }
+//    private boolean handleSponsorshipTitle(@NotNull TextComponent.Builder text, @NotNull Player player) {
+//        // 赞助头衔
+//        final SponsorshipApi2 api = this.sponsorshipApi;
+//
+//        if (api == null) return false;
+//
+//        final SponsorshipPlayerInfo info;
+//        try {
+//            info = api.getSponsorshipService().queryPlayerInfo(player.getUniqueId());
+//        } catch (Exception e) {
+//            getSLF4JLogger().error("", e);
+//            return false;
+//        }
+//
+//        if (info == null) return false;
+//
+//
+//        if (info.totalMoney() >= 10000) {
+//            final Component t = new MineDown("&#FF1493-#FF0000&『赞助』").toComponent();
+//            text.append(t);
+//            text.appendSpace();
+//        } else if (info.totalMoney() >= 1000) {
+//            text.append(Component.text("『").color(TextColor.fromHexString("#33CCFF")));
+//            text.append(Component.text("赞助").color(NamedTextColor.AQUA));
+//            text.append(Component.text("』").color(TextColor.fromHexString("#33CCFF")));
+//            text.appendSpace();
+//        } else {
+//            return false;
+//        }
+//
+//        return true;
+//    }
 
     @Nullable PlayerTitleApi getPlayerTitleApi() {
         return this.playerTitleApi;
@@ -453,8 +444,8 @@ public final class Welcome extends JavaPlugin implements Listener, WelcomeApi {
         // 全成就头衔
 
         // 赞助头衔
-        if (!prefixSet)
-            prefixSet = this.handleSponsorshipTitle(text, player);
+//        if (!prefixSet)
+//            prefixSet = this.handleSponsorshipTitle(text, player);
 
 
         // 萌新头衔
