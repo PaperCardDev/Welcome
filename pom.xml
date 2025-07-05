@@ -111,20 +111,6 @@
         </dependency>
 
         <dependency>
-            <groupId>cn.paper_card</groupId>
-            <artifactId>PaperCardTip</artifactId>
-            <version>1.0</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>cn.paper_card</groupId>
-            <artifactId>PlayerGender</artifactId>
-            <version>1.0</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
             <groupId>com.github.Anon8281</groupId>
             <artifactId>UniversalScheduler</artifactId>
             <version>0.1.6</version>
@@ -136,12 +122,6 @@
             <version>1.0</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.github.PaperCardDev</groupId>
-            <artifactId>player-title-api</artifactId>
-            <version>1.2</version>
-            <scope>provided</scope>
-        </dependency>
 
         <dependency>
             <groupId>de.themoep</groupId>
@@ -150,42 +130,14 @@
             <scope>compile</scope>
         </dependency>
 
-        <!--        <dependency>-->
-        <!--            <groupId>com.github.PaperCardDev</groupId>-->
-        <!--            <artifactId>qq-group-access-api</artifactId>-->
-        <!--            <version>1.2.1</version>-->
-        <!--            <scope>provided</scope>-->
-        <!--        </dependency>-->
-
-        <!--        <dependency>-->
-        <!--            <groupId>com.github.PaperCardDev</groupId>-->
-        <!--            <artifactId>qq-bind-api</artifactId>-->
-        <!--            <version>1.3</version>-->
-        <!--            <scope>provided</scope>-->
-        <!--        </dependency>-->
-
-        <!--        <dependency>-->
-        <!--            <groupId>com.github.PaperCardDev</groupId>-->
-        <!--            <artifactId>smurf-api</artifactId>-->
-        <!--            <version>1.0</version>-->
-        <!--            <scope>provided</scope>-->
-        <!--        </dependency>-->
-
-        <!--        <dependency>-->
-        <!--            <groupId>com.github.PaperCardDev</groupId>-->
-        <!--            <artifactId>qq-group-member-info-api</artifactId>-->
-        <!--            <version>1.1</version>-->
-        <!--            <scope>provided</scope>-->
-        <!--        </dependency>-->
-
         <dependency>
             <groupId>com.github.PaperCardDev</groupId>
-            <artifactId>player-online-time-api</artifactId>
-            <version>1.2</version>
+            <artifactId>paper-client-api</artifactId>
+            <version>1.7</version>
             <scope>provided</scope>
         </dependency>
 
-<!--        <dependency>-->
+        <!--        <dependency>-->
         <!--            <groupId>com.github.PaperCardDev</groupId>-->
         <!--            <artifactId>sponsorship-api</artifactId>-->
         <!--            <version>1.2</version>-->

@@ -5,17 +5,13 @@ api-version: 1.20
 author: Paper99
 folia-supported: true
 
+softdepend:
+  - PaperClient
 
 commands:
-  zanzhu:
-    permission: welcome.command.zanzhu
-
   check-progress:
     permission: welcome.command.check-progress
 
 permissions:
-  welcome.command.zanzhu:
-    default: true
-
   welcome.command.check-progress:
     default: true
